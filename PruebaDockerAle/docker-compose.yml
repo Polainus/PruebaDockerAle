@@ -1,25 +1,28 @@
-version: '3.8'
+version: '3.8'  # Especifica la versión de Docker Compose
 
 services:
   mysql:
-    image: mysql:9.0.1
+    image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: root  # Cambia esto por tu contraseña
-      MYSQL_DATABASE: Prueba
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: prueba
     ports:
-      - "3306:3306"
+      - "3306:3306"  # Opcional, si necesitas acceder a MySQL desde fuera del contenedor
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 30s
       timeout: 10s
       retries: 5
 
   springboot-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    ports:
+      - "8080:8080"  # Mapea el puerto 8080 del contenedor al puerto 8080 de la máquina
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prueba
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update  # Cambia a "update" si no quieres recrear la base de datos cada vez
     depends_on:
       mysql:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
+        condition: service_healthy  # Espera a que MySQL esté saludable
